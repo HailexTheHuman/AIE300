@@ -1,0 +1,36 @@
+services:
+  api:
+    container_name: fast_api
+    build: ./api
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=mongodb://mongo_db:27017
+    depends_on:
+      - db
+    networks:
+      - aie_network
+
+  db:
+    container_name: mongo_db
+    ports:
+      - "27017:27017"
+    image: mongo:latest
+    networks:
+      - aie_network
+    
+  frontend:
+    container_name: frontend
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=http://api:8000
+    depends_on:
+      - api
+    networks:
+      - aie_network
+
+networks:
+  aie_network:
+    driver: bridge
