@@ -1,3 +1,5 @@
+volumes:
+  mongo_data:
 services:
   api:
     container_name: fast_api
@@ -16,6 +18,13 @@ services:
     ports:
       - "27017:27017"
     image: mongo:latest
+    volumes:
+    - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - aie_network
     
