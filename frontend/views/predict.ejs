@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIE 300 prediction page</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <h1>Welcome to AIE 300 prediction page</h1>
+    <a href="/">home</a>
+    <div>
+        <form action="/predict" method="POST">
+        <h3>Iris Prediction</h3>
+        <input id="f1" name="f1" placeholder="Sepal Length (e.g. 5.1)" />
+        <input id="f2" name="f2" placeholder="Sepal Width (e.g. 3.5)" />
+        <input id="f3" name="f3" placeholder="Petal Length (e.g. 1.4)" />
+        <input id="f4" name="f4" placeholder="Petal Width (e.g. 0.2)" />
+        <button type="submit">Predict</button>
+        </form>
+        <p id="result"><% if(prediction != 0 && confidence != 0) { %> prediction: <%=prediction%>
+        confidence: <%=confidence%><%}%></p>
+    </div>
+
+</body>
+</html>

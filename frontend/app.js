@@ -124,6 +124,37 @@ app.delete('/items/:id', async (req, res) => {
     }
 });
 
+
+app.post('/predict', async (req, res) => {
+    const features = [
+        parseFloat(req.body.f1),
+        parseFloat(req.body.f2),
+        parseFloat(req.body.f3),
+        parseFloat(req.body.f4)
+    ];
+    const response = await fetch(`${apiUrl}/predict`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ features })
+    });
+    const data = await response.json();
+        res.render('predict', {
+            prediction:data.prediction,
+            confidence:data.confidence
+        });
+});
+
+
+app.get('/predict', async (req, res) => {
+    res.render('predict', {
+            prediction:0,
+            confidence:0
+        });
+});
+
+
+
+
 app.listen(port, () => {
     console.log(`Frontend server running at http://localhost:${port}`);
 });
