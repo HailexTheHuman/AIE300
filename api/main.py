@@ -4,8 +4,7 @@ import pymongo
 from dotenv import load_dotenv
 import os
 from pydantic import BaseModel
-import torch
-import torch.nn as nn
+import requests as http_requests
 
 load_dotenv()
 
@@ -15,12 +14,6 @@ class Item(BaseModel):
     price: float
     
     
-class SimpleClassifier(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.layer1 = nn.Linear(4, 16)
-        self.relu = nn.ReLU()
-        self.layer2 = nn.Linear(16, 3)
 
     def forward(self, x):
         return self.layer2(self.relu(self.layer1(x)))
@@ -30,11 +23,7 @@ mongo_url = os.getenv("DATABASE_URL")
 mongo_client = pymongo.MongoClient(mongo_url)
 mongo_db = mongo_client["aie_database"]
 items_collection = mongo_db["items"]
-model = SimpleClassifier()
-model.load_state_dict(torch.load("model.pth", map_location="cpu"))
-model.eval()
 
-IRIS_CLASSES = ["setosa", "versicolor", "virginica"]
 
 class PredictionRequest(BaseModel):
     features: list[float]
@@ -105,17 +94,20 @@ def delete_item(item_id: int):
 
 
 
+# @app.post("/predict")
 @app.post("/predict")
 def predict(req: PredictionRequest):
-    x = torch.FloatTensor(req.features).unsqueeze(0)
-    with torch.no_grad():
-        logits = model(x)
-        probs = torch.softmax(logits, dim=1)
-        confidence, predicted = probs.max(dim=1)
-    return {
-        "prediction": IRIS_CLASSES[predicted.item()],
-        "confidence": round(confidence.item(), 4)
-    }
+    try:
+        response = http_requests.post(
+            "http://model_service:8001/predict",
+            json={"features": req.features}
+        )
+        return response.json()
+    except Exception as e:
+        return fastapi.responses.JSONResponse(
+            status_code=500,
+            content={"error": f"Model service error: {str(e)}"}
+        )
 
 
 

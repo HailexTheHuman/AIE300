@@ -25,6 +25,7 @@ available endpoints are:
         Classifies an Iris flower based on its measurements.
         Request: json of features ex: { "features": [5.1, 3.5, 1.4, 0.2] }
         Features order: sepal length, sepal width, petal length, petal width (all in cm).
+        API forwards request to model_service which returns the response
         Response: json of prediction and confidence ex: { "prediction": "setosa", "confidence": 0.99 }
 
 

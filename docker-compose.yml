@@ -1,15 +1,25 @@
 volumes:
   mongo_data:
 services:
+
+  model_service:
+    container_name: model_service
+    build: ./model_service
+    ports:
+      - "8001:8001"
+    networks:
+      - aie_network
+  
   api:
     container_name: fast_api
     build: ./api
     ports:
-      - "8001:8000"
+      - "8002:8000"
     environment:
       - DATABASE_URL=mongodb://mongo_db:27017
     depends_on:
       - db
+      - model_service
     networks:
       - aie_network
 
