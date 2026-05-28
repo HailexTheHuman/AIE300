@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import os
 from pydantic import BaseModel
 import requests as http_requests
+from groq import Groq # first one the API worked for...
 
 load_dotenv()
 
