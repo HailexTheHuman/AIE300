@@ -6,8 +6,10 @@ import os
 from pydantic import BaseModel
 import requests as http_requests
 from groq import Groq # first one the API worked for...
+import json
 
 load_dotenv()
+groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # from claude
 class Item(BaseModel):
@@ -110,6 +112,86 @@ def predict(req: PredictionRequest):
             content={"error": f"Model service error: {str(e)}"}
         )
 
+
+class ChatRequest(BaseModel):
+    message: str
+    conversation_history: list = []
+
+class ChatResponse(BaseModel):
+    reply: str
+    conversation_history: list
+
+@app.post("/chat")
+def chat(request: ChatRequest):
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant for an item management and Iris flower classification app. Help users manage their items and understand Iris flower predictions. Be concise and helpful."}
+    ]
+    messages.extend(request.conversation_history)
+    messages.append({"role": "user", "content": request.message})
+
+    try:
+        response = groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=messages,
+            max_tokens=512
+        )
+        reply = response.choices[0].message.content
+
+        updated_history = request.conversation_history + [
+            {"role": "user", "content": request.message},
+            {"role": "assistant", "content": reply}
+        ]
+        return ChatResponse(reply=reply, conversation_history=updated_history)
+
+    except Exception as e:
+        raise fastapi.HTTPException(status_code=500, detail=str(e))
+
+class AnalyzeRequest(BaseModel):
+    content: str
+
+@app.post("/analyze")
+def analyze(request: AnalyzeRequest):
+    system_prompt = """You are a data analysis assistant for an item management app.
+Analyze the provided item description and respond with ONLY valid JSON in this exact format:
+{
+  "categories": ["category1", "category2"],
+  "tags": ["tag1", "tag2", "tag3"],
+  "sentiment": "positive" or "negative" or "neutral",
+  "summary": "one sentence summary"
+}
+Do not include any text outside the JSON object. No markdown, no backticks."""
+
+    few_shot = """Example:
+Input: "Vintage leather wallet, brown color, good condition, priced at $45"
+Output: {"categories": ["accessories", "vintage"], "tags": ["leather", "wallet", "brown"], "sentiment": "positive", "summary": "A well-priced vintage leather wallet in good condition."}
+
+Now analyze this:
+""" + request.content
+
+    try:
+        response = groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": few_shot}
+            ],
+            max_tokens=512,
+            temperature=0.2
+        )
+        raw = response.choices[0].message.content.strip().strip("```json").strip("```").strip()
+        result = json.loads(raw)
+
+        required = ["categories", "tags", "sentiment", "summary"]
+        for field in required:
+            if field not in result:
+                raise ValueError(f"Missing field: {field}")
+
+        return result
+
+    except json.JSONDecodeError:
+        raise fastapi.HTTPException(status_code=422, detail="LLM returned invalid JSON. Try again.")
+    except Exception as e:
+        raise fastapi.HTTPException(status_code=500, detail=str(e))
 
 
 @app.on_event("shutdown")

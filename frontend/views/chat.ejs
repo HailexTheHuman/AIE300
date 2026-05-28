@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        #chat-box {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+        }
+        .user-msg { text-align: right; margin: 5px 0; }
+        .user-msg span { background: #007bff; color: white; padding: 6px 12px; border-radius: 12px; display: inline-block; max-width: 70%; }
+        .ai-msg { text-align: left; margin: 5px 0; }
+        .ai-msg span { background: #e2e2e2; color: #333; padding: 6px 12px; border-radius: 12px; display: inline-block; max-width: 70%; }
+        #chat-form { display: flex; gap: 8px; }
+        #chat-form input { flex: 1; padding: 8px; }
+        #loading { display: none; color: #888; font-style: italic; margin: 4px 0; }
+    </style>
+</head>
+<body>
+    <h1>Chat Assistant</h1>
+    <a href="/">home</a>
+
+    <div id="chat-box">
+        <% conversation_history.forEach(msg => { %>
+            <% if (msg.role === 'user') { %>
+                <div class="user-msg"><span><%= msg.content %></span></div>
+            <% } else { %>
+                <div class="ai-msg"><span><%= msg.content %></span></div>
+            <% } %>
+        <% }) %>
+    </div>
+    <p id="loading">Assistant is typing...</p>
+
+    <form id="chat-form" action="/chat" method="POST" onsubmit="showLoading()">
+        <input type="hidden" name="conversation_history"
+            value="<%- JSON.stringify(conversation_history).replace(/"/g, '&quot;') %>">
+        <input type="text" name="message" placeholder="Type a message..." required autofocus />
+        <button type="submit">Send</button>
+    </form>
+
+    <script>
+        const box = document.getElementById('chat-box');
+        box.scrollTop = box.scrollHeight;
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

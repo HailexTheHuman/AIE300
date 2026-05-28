@@ -46,3 +46,26 @@ docker run --rm curlimages/curl curl -X POST "http://model-runner.docker.interna
 
 
 
+## Lab 6: LLM Integration
+
+### Provider: Groq (llama-3.1-8b-instant)
+- SDK: `groq==1.2.0`
+- API key stored in `.env` (never committed), placeholder in `.env.example`
+
+### POST /chat
+- Accepts `message` + `conversation_history` array
+- System prompt tailored to item management and Iris classification domain
+- Returns `reply` + updated `conversation_history` for multi-turn context
+
+### POST /analyze
+**System prompt:** Instructs model to return only valid JSON with no
+markdown or backticks — categories, tags, sentiment, and summary fields.
+
+**Few-shot example:** One example input/output pair showing exact format.
+
+**Expected output:**
+{"categories": [...], "tags": [...], "sentiment": "positive|negative|neutral", "summary": "..."}
+
+**Failure handling:** Strips markdown backticks before parsing,
+json.loads() in try/catch returns 422 on invalid JSON, 500 on other errors.
+Low temperature (0.2) used for consistent structured output.

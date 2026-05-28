@@ -17,6 +17,7 @@ services:
       - "8002:8000"
     environment:
       - DATABASE_URL=mongodb://mongo_db:27017
+      - GROQ_API_KEY=${GROQ_API_KEY}
     depends_on:
       - db
       - model_service

@@ -153,6 +153,31 @@ app.get('/predict', async (req, res) => {
 });
 
 
+app.get('/chat', (req, res) => {
+    res.render('chat', { conversation_history: [] });
+});
+
+app.post('/chat', async (req, res) => {
+    const { message, conversation_history } = req.body;
+    const history = conversation_history ? JSON.parse(conversation_history) : [];
+
+    try {
+        const response = await fetch(`${apiUrl}/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message, conversation_history: history })
+        });
+        const data = await response.json();
+        res.render('chat', {
+            conversation_history: data.conversation_history
+        });
+    } catch (error) {
+        console.error('Chat error:', error);
+        res.status(500).send('Chat error');
+    }
+});
+
+
 
 
 app.listen(port, () => {
